@@ -43,34 +43,30 @@
             color: white;
             border-radius: 5px;
             user-select: none;
-            -webkit-tap-highlight-color: transparent; /* Elimina el highlight al tocar en iOS */
-            touch-action: manipulation; /* Mejora la respuesta táctil */
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
-        /* Emociones rojas (alta energía, bajo bienestar) */
         .red {
             background-color: #e57373;
         }
 
-        /* Emociones amarillas (alta energía, alto bienestar) */
         .yellow {
             background-color: #ffeb3b;
             color: black;
         }
 
-        /* Emociones azules (baja energía, bajo bienestar) */
         .blue {
             background-color: #64b5f6;
         }
 
-        /* Emociones verdes (baja energía, alto bienestar) */
         .green {
             background-color: #81c784;
         }
 
         .emotion-cell.selected {
-            border: 3px solid #000; /* Borde más grueso para mejor visibilidad */
-            transform: scale(0.95); /* Efecto visual al seleccionar */
+            border: 3px solid #000;
+            transform: scale(0.95);
         }
 
         #save, #save-activity, #export-btn {
@@ -106,12 +102,12 @@
             }
             
             .emotion-cell {
-                min-height: 44px; /* Altura mínima para mejor área táctil */
+                min-height: 44px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 margin: 2px;
-                font-size: 16px; /* Tamaño de fuente legible en móvil */
+                font-size: 16px;
             }
         }
 
@@ -121,17 +117,16 @@
             }
 
             .emotion-cell {
-                padding: 12px 8px; /* Más padding vertical para mejor área táctil */
+                padding: 12px 8px;
             }
 
             input[type="text"], button {
-                font-size: 16px; /* Evita el zoom automático en iOS */
+                font-size: 16px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- El resto del HTML permanece igual hasta el script -->
     <h1>Registro Emocional y Monitoreo de Actividades</h1>
 
     <h2>Registro Emocional</h2>
@@ -141,25 +136,21 @@
 
     <label for="emotion">Selecciona tus emociones:</label>
     <div id="emotion-grid">
-        <!-- Emociones rojas (alta energía, bajo bienestar) -->
         <div class="emotion-cell red" data-emotion="Enfadada">Enfadada</div>
         <div class="emotion-cell red" data-emotion="Irritada">Irritada</div>
         <div class="emotion-cell red" data-emotion="Nerviosa">Nerviosa</div>
         <div class="emotion-cell red" data-emotion="Ansiosa">Ansiosa</div>
         
-        <!-- Emociones amarillas (alta energía, alto bienestar) -->
         <div class="emotion-cell yellow" data-emotion="Alegre">Alegre</div>
         <div class="emotion-cell yellow" data-emotion="Motivada">Motivada</div>
         <div class="emotion-cell yellow" data-emotion="Eufórica">Eufórica</div>
         <div class="emotion-cell yellow" data-emotion="Sorprendida">Sorprendida</div>
 
-        <!-- Emociones azules (baja energía, bajo bienestar) -->
         <div class="emotion-cell blue" data-emotion="Triste">Triste</div>
         <div class="emotion-cell blue" data-emotion="Deprimida">Deprimida</div>
         <div class="emotion-cell blue" data-emotion="Apática">Apática</div>
         <div class="emotion-cell blue" data-emotion="Desanimada">Desanimada</div>
 
-        <!-- Emociones verdes (baja energía, alto bienestar) -->
         <div class="emotion-cell green" data-emotion="Calmada">Calmada</div>
         <div class="emotion-cell green" data-emotion="Relajada">Relajada</div>
         <div class="emotion-cell green" data-emotion="Contenta">Contenta</div>
@@ -196,31 +187,25 @@
     <div class="feedback" id="feedback"></div>
 
     <script>
-        // Función para manejar la selección de emociones
         function handleEmotionSelection(element, event) {
-            event.preventDefault(); // Prevenir comportamiento por defecto
+            event.preventDefault();
             element.classList.toggle('selected');
         }
 
-        // Agregar eventos para click y touch
         document.querySelectorAll('.emotion-cell').forEach(cell => {
-            // Evento touch
             cell.addEventListener('touchstart', function(e) {
                 handleEmotionSelection(this, e);
             }, { passive: false });
 
-            // Mantener el evento click para dispositivos no táctiles
             cell.addEventListener('click', function(e) {
                 handleEmotionSelection(this, e);
             });
 
-            // Prevenir el comportamiento de "ghost clicks"
             cell.addEventListener('touchend', function(e) {
                 e.preventDefault();
             }, { passive: false });
         });
 
-        // Guardar registros emocionales
         document.getElementById('save').addEventListener('click', function() {
             const trigger = document.getElementById('trigger').value;
             const selectedEmotions = Array.from(document.querySelectorAll('.emotion-cell.selected')).map(cell => cell.dataset.emotion);
@@ -244,9 +229,8 @@
                 records.push(record);
                 localStorage.setItem('emotionalRecords', JSON.stringify(records));
                 alert('Registro guardado exitosamente');
-                updateRecordList();
+                updateAllRecords();
                 
-                // Limpiar los campos después de guardar
                 document.getElementById('trigger').value = '';
                 document.getElementById('additional-emotion').value = '';
                 document.getElementById('body-response').value = '';
@@ -260,44 +244,78 @@
             }
         });
 
-        // Mostrar registros guardados
-        function updateRecordList() {
+        // Guardar actividades
+        document.getElementById('save-activity').addEventListener('click', function() {
+            const activity = document.getElementById('activity').value;
+            
+            if (activity) {
+                let activities = JSON.parse(localStorage.getItem('activityRecords')) || [];
+                activities.push({
+                    activity: activity,
+                    date: new Date().toLocaleString()
+                });
+                localStorage.setItem('activityRecords', JSON.stringify(activities));
+                alert('Actividad guardada exitosamente');
+                document.getElementById('activity').value = '';
+                updateAllRecords();
+            } else {
+                alert('Por favor ingresa una actividad');
+            }
+        });
+
+        // Actualizar la lista para mostrar registros emocionales y actividades
+        function updateAllRecords() {
             let records = JSON.parse(localStorage.getItem('emotionalRecords')) || [];
+            let activities = JSON.parse(localStorage.getItem('activityRecords')) || [];
             const recordList = document.getElementById('record-list');
             recordList.innerHTML = '';
+
+            // Mostrar registros emocionales
             records.forEach(record => {
                 let listItem = document.createElement('li');
                 listItem.textContent = `Fecha: ${record.date}, Desencadenante: ${record.trigger}, Emociones: ${record.emotions}, Respuesta Corporal: ${record.bodyResponse}, Conducta: ${record.behavior}, Pensamiento: ${record.cognitiveResult}`;
                 recordList.appendChild(listItem);
             });
+
+            // Mostrar actividades
+            activities.forEach(activity => {
+                let listItem = document.createElement('li');
+                listItem.textContent = `Fecha: ${activity.date}, Actividad: ${activity.activity}`;
+                recordList.appendChild(listItem);
+            });
+
             provideFeedback(records);
         }
 
-        // Cargar registros al iniciar
-        window.onload = updateRecordList;
-
-        // Exportar registros a CSV
         document.getElementById('export-btn').addEventListener('click', function() {
             let records = JSON.parse(localStorage.getItem('emotionalRecords')) || [];
-            let csvContent = "﻿Fecha,Desencadenante,Emociones,Respuesta Corporal,Conducta,Resultado Cognitivo\n";
+            let activities = JSON.parse(localStorage.getItem('activityRecords')) || [];
+            
+            let csvContent = "REGISTROS EMOCIONALES\n";
+            csvContent += "Fecha,Desencadenante,Emociones,Respuesta Corporal,Conducta,Pensamiento\n";
             records.forEach(record => {
                 csvContent += `${record.date},${record.trigger},${record.emotions},${record.bodyResponse},${record.behavior},${record.cognitiveResult}\n`;
+            });
+            
+            csvContent += "\nACTIVIDADES\n";
+            csvContent += "Fecha,Actividad\n";
+            activities.forEach(activity => {
+                csvContent += `${activity.date},${activity.activity}\n`;
             });
 
             let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             let link = document.createElement("a");
             let url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
-            link.setAttribute("download", "registros_emocionales.csv");
+            link.setAttribute("download", "registros_emocionales_y_actividades.csv");
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         });
 
-        // Proveer retroalimentación basada en registros
         function provideFeedback(records) {
-            let anxietyCount = records.filter(record => record.emotions.includes('Ansioso')).length;
+            let anxietyCount = records.filter(record => record.emotions.includes('Ansiosa')).length;
             const feedbackDiv = document.getElementById('feedback');
             if (anxietyCount > 3) {
                 feedbackDiv.textContent = "Parece que has registrado varias emociones de ansiedad. ¿Has considerado practicar alguna técnica de relajación? Si es así, recuérdale a Juan que te la envíe";
@@ -305,6 +323,8 @@
                 feedbackDiv.textContent = '';
             }
         }
+
+        window.onload = updateAllRecords;
     </script>
 </body>
 </html>
